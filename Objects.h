@@ -10,6 +10,7 @@
 #include <boost/chrono.hpp>
 #include <vector>
 #include <random>
+#include <future>
 
 
 void getKeyPress();
@@ -18,27 +19,36 @@ enum class Direction {
     STAY = 0, UP = 'w', DOWN = 's', LEFT = 'a', RIGHT = 'd'
 };
 
+struct Position {
+    int X, Y;
+};
 
 class Apple{
-    int x, y;
+    Position position;
 public:
+    Apple () {
+        spawn();
+    }
     void spawn();
 };
 
-class Snake{
-    int x, y;
+class Snake {
+    std::vector<int> BodyX;
+    std::vector<int> BodyY;
+    Position headPosition;
+
 public:
-    inline static Direction dir {Direction::STAY};
-
-    void spawn();
-    void move(int x, int y)
-    {
-        this->x += x;
-        this->y += y;
+    Snake () {
+        spawn();
     }
+    inline static Direction dir {Direction::STAY};
+    void draw();
+    bool eat();
+    void spawn();
+    void grow(int && x, int && y);
+    void move(int && x, int && y);
 
-    int GetPositionX () { return x; }
-    int GetPositionY () { return y; }
+    Position& GetPosition () { return headPosition; }
 };
 
 class Map{
@@ -57,11 +67,7 @@ public:
     };
 
 
-    Map (Apple &apples, Snake& snake) : apples(apples), snake(snake)
-    {
-        this->apples.spawn();
-        this->snake.spawn();
-    }
+    Map (Apple &apples, Snake& snake) : apples(apples), snake(snake) {}
 
     void update();
 };
@@ -69,6 +75,8 @@ public:
 
 class Game {
 public:
+    inline static int count = 0;
+
     inline static bool state = true;
     void play()
     {
@@ -77,15 +85,18 @@ public:
 
         Map map (apple, snake);
 
-        boost::thread keyBoard(getKeyPress);
-        keyBoard.detach();
+//        boost::thread keyBoard(getKeyPress);
+
+        auto keyBoard = std::async(std::launch::async, getKeyPress);
+//        keyBoard.detach();
 
         while (Game::state){
             boost::this_thread::sleep_for( boost::chrono::milliseconds(500));
             map.update();
 
         }
-        std::cout << "Game lose" << std::endl;
+        std::cout << "[ Game lose ]" << std::endl;
+        std::cout << "Press key ..." << std::endl;
 
     }
 };

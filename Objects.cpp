@@ -53,16 +53,56 @@ void GetXY (int & x, int & y)
 }
 
 void Apple::spawn() {
-    GetXY(y, x);
+    GetXY(position.Y, position.X);
 
-    Map::map[y][x] = 'a';
+    Map::map[position.Y][position.X] = 'a';
 }
 
 void Snake::spawn() {
-    GetXY(y, x);
+    GetXY(headPosition.Y, headPosition.X);
 
-    Map::map[y][x] = 'S';
+    Map::map[headPosition.Y][headPosition.X] = 'S';
 }
+
+void Snake::move(int &&x, int &&y) {
+
+    if (BodyX.size() > 0) {
+        Map::map[BodyY[0]][BodyX[0]] = ' ';
+
+        BodyX[0] = this->headPosition.X;
+        BodyY[0] = this->headPosition.Y;
+
+        for (int i = BodyX.size() - 1; i > 0; --i) {
+            Map::map[BodyY[i]][BodyX[i]] = ' ';
+
+            BodyX[i] = BodyX[i - 1];
+            BodyY[i] = BodyY[i - 1];
+        }
+    }
+    this->headPosition.X += x;
+    this->headPosition.Y += y;
+
+    if (Map::map[headPosition.Y][headPosition.X] == '#') Game::state = false;
+}
+
+bool Snake::eat() {
+    return Map::map[headPosition.Y][headPosition.X] == 'a';
+}
+
+void Snake::draw() {
+    Map::map[headPosition.Y][headPosition.X] = 'S';
+
+    for (int i = 0; i < BodyX.size(); ++i) {
+        Map::map[BodyY[i]][BodyX[i]] = '*';
+    }
+
+}
+
+void Snake::grow(int &&x, int &&y) {
+    BodyX.push_back(x);
+    BodyY.push_back(y);
+}
+
 
 void Map::show() {
     for (int i = 0; i < map.size(); ++i) {
@@ -76,41 +116,37 @@ void Map::show() {
 void Map::update() {
     system("clear");
 
-    int x = snake.GetPositionX();
-    int y = snake.GetPositionY();
+    int x = snake.GetPosition().X;
+    int y = snake.GetPosition().Y;
+
     map[y][x] = ' ';
 
     switch (Snake::dir) {
         case Direction::UP:
             snake.move(0,-1);
-            if (map[y - 1][x] == '#')
-                Game::state = false;
-            else
-                map[y - 1][x] = 'S';
             break;
         case Direction::DOWN:
             snake.move(0,1);
-            if (map[y + 1][x] == '#')
-                Game::state = false;
-            else
-                map[y + 1][x] = 'S';
             break;
         case Direction::LEFT:
             snake.move(-1,0);
-            if (map[y][x - 1] == '#')
-                Game::state = false;
-            else
-                map[y][x - 1] = 'S';
             break;
         case Direction::RIGHT:
             snake.move(1,0);
-            if (map[y][x + 1] == '#')
-                Game::state = false;
-            else
-                map[y][x + 1] = 'S';
+            break;
+        case Direction::STAY:
+            map[y][x] = 'S';
             break;
     }
 
+    if (snake.eat()) {
+        snake.grow(std::move(x), std::move(y));
+        Game::count += 1;
+        apples.spawn();
+    }
 
+    snake.draw();
+
+    std::cout << "Points: " << Game::count << std::endl;
     show();
 }
