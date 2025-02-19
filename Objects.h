@@ -6,7 +6,6 @@
 #define SNAKE_OBJECTS_H
 
 #include <iostream>
-#include <boost/thread.hpp>
 #include <vector>
 #include <random>
 #include <future>
@@ -90,7 +89,7 @@ public:
 //        keyBoard.detach();
 
         while (Game::state){
-            boost::this_thread::sleep_for( boost::chrono::milliseconds(100));
+            std::this_thread::sleep_for( std::chrono::milliseconds(100));
             map.update();
 
         }
