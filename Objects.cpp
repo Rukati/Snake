@@ -6,6 +6,7 @@
 #ifdef __linux__
 #include <termios.h>
 #include <unistd.h>
+#include <iostream>
 
 void getKeyPress() {
     struct termios oldt, newt;
@@ -40,28 +41,38 @@ void getKeyPress() {
         }
     }
 }
-#elif _WIN32
+#elif defined(_WIN32)
+#include <conio.h>
 #include <windows.h>
-void getKeyPress()
-{
+#include <iostream>
+
+void getKeyPress() {
     while (Game::state) {
-        if (GetAsyncKeyState('w') & 0x8000)
-            if (Snake::dir != Direction::DOWN)
-                    Snake::dir = Direction::UP;
-        if (GetAsyncKeyState('s') & 0x8000)
-            if (Snake::dir != Direction::UP)
-                    Snake::dir = Direction::DOWN;
-        if (GetAsyncKeyState('a') & 0x8000)
-            if (Snake::dir != Direction::RIGHT)
-                    Snake::dir = Direction::LEFT;
-        if (GetAsyncKeyState('d') & 0x8000)
-            if (Snake::dir != Direction::LEFT)
-                    Snake::dir = Direction::RIGHT;
+        if (_kbhit()) {
+            char ch = _getch();
+            switch (ch) {
+                case 'w':
+                    if (Snake::dir != Direction::DOWN)
+                        Snake::dir = Direction::UP;
+                    break;
+                case 's':
+                    if (Snake::dir != Direction::UP)
+                        Snake::dir = Direction::DOWN;
+                    break;
+                case 'a':
+                    if (Snake::dir != Direction::RIGHT)
+                        Snake::dir = Direction::LEFT;
+                    break;
+                case 'd':
+                    if (Snake::dir != Direction::LEFT)
+                        Snake::dir = Direction::RIGHT;
+                    break;
+            }
+        }
+        Sleep(50);
     }
 }
 #endif
-
-
 
 void GetXY (int & x, int & y)
 {
