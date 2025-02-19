@@ -7,7 +7,6 @@
 
 #include <iostream>
 #include <boost/thread.hpp>
-#include <boost/chrono.hpp>
 #include <vector>
 #include <random>
 #include <future>
@@ -26,22 +25,15 @@ struct Position {
 class Apple{
     Position position;
 public:
-    Apple () {
-        spawn();
-    }
     void spawn();
 };
 
 class Snake {
-    std::vector<int> BodyX;
-    std::vector<int> BodyY;
+    std::vector<Position> tailPosition;
     Position headPosition;
-
 public:
-    Snake () {
-        spawn();
-    }
     inline static Direction dir {Direction::STAY};
+
     void draw();
     bool eat();
     void spawn();
@@ -54,20 +46,27 @@ public:
 class Map{
     Apple apples;
     Snake snake;
+
+    const int size = 30;
 public:
     void show ();
-    inline static std::vector<std::vector<char>> map = {
-            {'#','#','#','#','#','#','#','#','#','#','#','#','#'},
-            {'#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#'},
-            {'#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#'},
-            {'#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#'},
-            {'#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#'},
-            {'#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#'},
-            {'#','#','#','#','#','#','#','#','#','#','#','#','#'}
-    };
+    inline static std::vector<std::vector<char>> map;
 
 
-    Map (Apple &apples, Snake& snake) : apples(apples), snake(snake) {}
+    Map (Apple &apples, Snake& snake) : apples(apples), snake(snake) {
+        for (int i = 0; i < size; ++i) {
+            map.push_back(std::vector<char>(size));
+            for (int j = 0; j < size; ++j) {
+                if (i == 0 || i == size - 1 || j == 0 || j == size - 1 )
+                    map[i][j] = '#';
+                else
+                    map[i][j] = ' ';
+            }
+        }
+
+        this->apples.spawn();
+        this->snake.spawn();
+    }
 
     void update();
 };
@@ -91,7 +90,7 @@ public:
 //        keyBoard.detach();
 
         while (Game::state){
-            boost::this_thread::sleep_for( boost::chrono::milliseconds(500));
+            boost::this_thread::sleep_for( boost::chrono::milliseconds(100));
             map.update();
 
         }

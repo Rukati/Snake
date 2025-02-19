@@ -7,10 +7,9 @@
 
 
 void getKeyPress() {
-    while (Game::state) {
         struct termios oldt, newt;
         char ch;
-
+    while (Game::state) {
         tcgetattr(STDIN_FILENO, &oldt);
         newt = oldt;
         newt.c_lflag &= ~(ICANON | ECHO);
@@ -65,20 +64,20 @@ void Snake::spawn() {
 }
 
 void Snake::move(int &&x, int &&y) {
+    if (!tailPosition.empty()) {
+        Map::map[tailPosition[0].Y][tailPosition[0].X] = ' ';
 
-    if (BodyX.size() > 0) {
-        Map::map[BodyY[0]][BodyX[0]] = ' ';
+        for (int i = tailPosition.size() - 1; i > 0; --i) {
+            Map::map[tailPosition[i].Y][tailPosition[i].X] = ' ';
 
-        BodyX[0] = this->headPosition.X;
-        BodyY[0] = this->headPosition.Y;
-
-        for (int i = BodyX.size() - 1; i > 0; --i) {
-            Map::map[BodyY[i]][BodyX[i]] = ' ';
-
-            BodyX[i] = BodyX[i - 1];
-            BodyY[i] = BodyY[i - 1];
+            tailPosition[i].X = tailPosition[i - 1].X;
+            tailPosition[i].Y = tailPosition[i - 1].Y;
         }
+
+        tailPosition[0].X = this->headPosition.X;
+        tailPosition[0].Y = this->headPosition.Y;
     }
+
     this->headPosition.X += x;
     this->headPosition.Y += y;
 
@@ -92,15 +91,14 @@ bool Snake::eat() {
 void Snake::draw() {
     Map::map[headPosition.Y][headPosition.X] = 'S';
 
-    for (int i = 0; i < BodyX.size(); ++i) {
-        Map::map[BodyY[i]][BodyX[i]] = '*';
+    for (int i = 0; i < tailPosition.size(); ++i) {
+        Map::map[tailPosition[i].Y][tailPosition[i].X] = '*';
     }
 
 }
 
-void Snake::grow(int &&x, int &&y) {
-    BodyX.push_back(x);
-    BodyY.push_back(y);
+void Snake::grow(int &&x , int &&y) {
+    tailPosition.push_back(Position(std::move(x), std::move(y)));
 }
 
 
@@ -146,6 +144,8 @@ void Map::update() {
     }
 
     snake.draw();
+
+    if (Map::map[snake.GetPosition().Y][snake.GetPosition().X] == '*') Game::state = false;
 
     std::cout << "Points: " << Game::count << std::endl;
     show();
