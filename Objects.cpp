@@ -1,14 +1,15 @@
 //
 // Created by rukati on 18.02.2025.
 //
-#include <termios.h>
-#include <unistd.h>
 #include "Objects.h"
 
+#ifdef __linux__
+#include <termios.h>
+#include <unistd.h>
 
 void getKeyPress() {
-        struct termios oldt, newt;
-        char ch;
+    struct termios oldt, newt;
+    char ch;
     while (Game::state) {
         tcgetattr(STDIN_FILENO, &oldt);
         newt = oldt;
@@ -39,6 +40,28 @@ void getKeyPress() {
         }
     }
 }
+#elif _WIN32
+#include <windows.h>
+void getKeyPress()
+{
+    while (Game::state) {
+        if (GetAsyncKeyState('w') & 0x8000)
+            if (Snake::dir != Direction::DOWN)
+                    Snake::dir = Direction::UP;
+        if (GetAsyncKeyState('s') & 0x8000)
+            if (Snake::dir != Direction::UP)
+                    Snake::dir = Direction::DOWN;
+        if (GetAsyncKeyState('a') & 0x8000)
+            if (Snake::dir != Direction::RIGHT)
+                    Snake::dir = Direction::LEFT;
+        if (GetAsyncKeyState('d') & 0x8000)
+            if (Snake::dir != Direction::LEFT)
+                    Snake::dir = Direction::RIGHT;
+    }
+}
+#endif
+
+
 
 void GetXY (int & x, int & y)
 {
@@ -112,8 +135,11 @@ void Map::show() {
 }
 
 void Map::update() {
+#ifdef __linux__
     system("clear");
-
+#elif _WIN32
+    system("cls");
+#endif
     int x = snake.GetPosition().X;
     int y = snake.GetPosition().Y;
 
